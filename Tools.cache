@@ -1,0 +1,12 @@
+CACHE MANIFEST
+#version 0.1
+
+CACHE:
+    index.html
+    css/fr-tools.css
+    js/jquery-3.2.0.min.js
+    js/jquery.gridster.min.js
+    js/fr-tools.js
+
+NETWORK:
+    *
