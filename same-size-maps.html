@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <title>同比地图</title>
+        <meta name="keywords" content="地图, 双地图, 同比例放大">
+        <meta name="description" content="可以同比例放大的地图">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=9kKan8hqL7ufdILQDNIsMKPcqzTGaYzb"></script>
+
+        <style>
+            body,
+            html {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                font-family: "微软雅黑";
+            }
+
+            #map1_container,
+            #map2_container {
+                float: left;
+                overflow: hidden;
+                width: 100%;
+                height: 50%;
+                margin: 0;
+                position: relative;
+            }
+
+            #allmap1 {
+                height: 100%;
+                margin: 0 0 3px;
+            }
+
+            #allmap2 {
+                height: 100%;
+                margin: 3px 0 0;
+            }
+
+            #r-result1,
+            #r-result2 {
+                width: 100%;
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 100;
+            }
+
+            .tangram-suggestion-main {
+                z-index: 100;
+            }
+        </style>
+
+    </head>
+    <body>
+        <div id="map1_container">
+            <div id="allmap1"></div>
+            <div id="r-result1">
+                <input type="text" id="suggestId1" size="20" placeholder="请输入地址" style="width:150px;"/>
+            </div>
+            <div id="searchResultPanel1" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+        </div>
+        <div id="map2_container">
+            <div id="allmap2"></div>
+            <div id="r-result2">
+                <input type="text" id="suggestId2" size="20" placeholder="请输入地址" style="width:150px;"/>
+            </div>
+            <div id="searchResultPanel2" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+        </div>
+    </body>
+</html>
+<script>
+
+    // 初始化位置：北京
+    var centerAndZoom1 = [116.404, 39.915, 10];
+    var centerAndZoom2 = [116.404, 39.915, 10];
+
+    // 从参数中解析两张地图的中心位置
+    var qs = location.search.substr(1).split('&');
+    if (qs) {
+        for (var i = 0; i < qs.length; i++) {
+            switch (qs[i].substring(0, qs[i].indexOf('='))) {
+                case "map1": {
+                    centerAndZoom1 = qs[i].substring(qs[i].indexOf('=') + 1).split(',');
+                    break;
+                }
+                case "map2": {
+                    centerAndZoom2 = qs[i].substring(qs[i].indexOf('=') + 1).split(',');
+                    break;
+                }
+                default:
+                    break;
+            }
+
+        }
+    }
+
+    // 加载第一张地图
+    var map1 = new BMapGL.Map('allmap1'); // 创建Map实例1
+    map1.centerAndZoom(new BMapGL.Point(centerAndZoom1[0], centerAndZoom1[1]), centerAndZoom1[2]);
+    map1.enableScrollWheelZoom(true);
+    map1.addControl(new BMapGL.ScaleControl()); // 添加比例尺控件
+    map1.addEventListener("zoomend", throttle(function (evt) {
+        if (evt.currentTarget || evt.currentTarget.zoomLevel) {
+            map2.zoomTo(evt.currentTarget.zoomLevel);
+        }
+    }, 500));
+    initSearchInput(map1, "suggestId1", "searchResultPanel1");
+
+
+    // 加载第二张地图
+    var map2 = new BMapGL.Map('allmap2'); // 创建Map实例2
+    map2.centerAndZoom(new BMapGL.Point(centerAndZoom2[0], centerAndZoom2[1]), centerAndZoom2[2]);
+    map2.enableScrollWheelZoom(true);
+    map2.addControl(new BMapGL.ScaleControl()); // 添加比例尺控件
+    map2.addEventListener("zoomend", throttle(function (evt) {
+        if (evt.currentTarget || evt.currentTarget.zoomLevel) {
+            map1.zoomTo(evt.currentTarget.zoomLevel);
+        }
+    }, 500));
+    initSearchInput(map2, "suggestId2", "searchResultPanel2");
+
+
+    function initSearchInput(map, suggestInputId, searchResultPanelId) {
+        function G(id) {
+            return document.getElementById(id);
+        }
+
+        //建立一个自动完成的对象
+        var ac = new BMapGL.Autocomplete({
+            "input": suggestInputId, "location": map
+        });
+
+        ac.addEventListener("onhighlight", function (e) {  //鼠标放在下拉列表上的事件
+            var str = "";
+            var _value = e.fromitem.value;
+            var value = "";
+            if (e.fromitem.index > -1) {
+                value = _value.province + _value.city + _value.district + _value.street + _value.business;
+            }
+            str = "FromItem<br />index = " + e.fromitem.index + "<br />value = " + value;
+
+            value = "";
+            if (e.toitem.index > -1) {
+                _value = e.toitem.value;
+                value = _value.province + _value.city + _value.district + _value.street + _value.business;
+            }
+            str += "<br />ToItem<br />index = " + e.toitem.index + "<br />value = " + value;
+            G(searchResultPanelId).innerHTML = str;
+        });
+
+        var myValue;
+        ac.addEventListener("onconfirm", function (e) {    //鼠标点击下拉列表后的事件
+            var _value = e.item.value;
+            myValue = _value.province + _value.city + _value.district + _value.street + _value.business;
+            G(searchResultPanelId).innerHTML = "onconfirm<br />index = " + e.item.index + "<br />myValue = " + myValue;
+
+            setPlace();
+        });
+
+        function setPlace() {
+            map.clearOverlays();    //清除地图上所有覆盖物
+            function myFun() {
+                var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
+                map.centerAndZoom(pp, 18);
+                map.addOverlay(new BMap.Marker(pp));    //添加标注
+            }
+
+            var local = new BMapGL.LocalSearch(map, { //智能搜索
+                onSearchComplete: myFun
+            });
+            local.search(myValue);
+        }
+    }
+
+    function throttle(fun, delay) {
+        var timer = null;
+        var startTime = Date.now();
+
+        return function () {
+            var curTime = Date.now();
+            var remaining = delay - (curTime - startTime);  // 计算出两次触发的时间间隔有没有大余delay
+            var context = this;
+            var args = arguments;
+
+            clearTimeout(timer);
+            if (remaining <= 0) {
+                fun.apply(context, args);
+                startTime = Date.now();  // 如果两次触发时间大余delay，则立马触发一次任务函数并且更新起始时间戳
+            } else {
+                timer = setTimeout(fun, remaining);  // 如果两次触发时间小于delay， 则改变定时器时间保证delay时间一定触发任务函数
+            }
+        }
+    }
+
+</script>
