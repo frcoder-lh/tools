@@ -11,7 +11,8 @@
 
         <style>
             body,
-            html {
+            html,
+            #map_container {
                 overflow: hidden;
                 width: 100%;
                 height: 100%;
@@ -30,18 +31,13 @@
                 position: relative;
             }
 
-            #allmap1 {
+            #map1,
+            #map2 {
                 height: 100%;
-                margin: 0 0 3px;
             }
 
-            #allmap2 {
-                height: 100%;
-                margin: 3px 0 0;
-            }
-
-            #r-result1,
-            #r-result2 {
+            #map1-search,
+            #map2-search {
                 width: 100%;
                 position: absolute;
                 top: 10px;
@@ -53,7 +49,35 @@
                 z-index: 100;
             }
 
-            #switch {
+            #swapContainer {
+                position: absolute;
+                bottom: 5px;
+                right: 160px;
+                z-index: 100;
+            }
+
+            #switchMapStyle {
+                position: absolute;
+                bottom: 5px;
+                right: 120px;
+                z-index: 100;
+            }
+
+            #switchDirection {
+                position: absolute;
+                bottom: 5px;
+                right: 80px;
+                z-index: 100;
+            }
+
+            #zoomUp {
+                position: absolute;
+                bottom: 5px;
+                right: 40px;
+                z-index: 100;
+            }
+
+            #zoomDown {
                 position: absolute;
                 bottom: 5px;
                 right: 5px;
@@ -65,27 +89,58 @@
 
     </head>
     <body>
-        <div id="map1_container">
-            <div id="allmap1"></div>
-            <div id="r-result1">
-                <input type="text" id="suggestId1" size="20" placeholder="请输入地址" style="width:150px;"/>
+        <div id="map_container">
+            <div id="map1_container">
+                <div id="map1"></div>
+                <div id="map1-search">
+                    <input type="text" id="map1-search-input" size="20" placeholder="请输入地址" style="width:150px;"/>
+                    <div id="map1-search-result" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+                </div>
+                <div id="swapContainer" onclick="swapContainer();">
+                    <svg t="1605163423207" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8100" width="32" height="32">
+                        <path fill="#484D55"
+                              d="m103.466711,129.777819l0,775.444442l817.066651,0l0,-775.444442m-868.133321,-110.777772l919.199991,0a51.06667,55.388892 0 0 1 51.06667,55.388893l0,886.222201a51.06667,55.388892 0 0 1 -51.06667,55.388892l-919.199991,0a51.06667,55.388892 0 0 1 -51.06667,-55.388892l0,-886.222201a51.06667,55.388892 0 0 1 51.06667,-55.388893zm612.799994,221.555557l182.733328,164.166664l-182.733328,168.166664l0,-110.777784l-204.266669,0l0,-110.777772l203.069794,-1.298177l1.196875,-109.479595zm-306.399997,553.888872l-178.733328,-166.166664l178.733328,-166.166664l0,110.777784l204.266669,0l0,110.777772l-204.266669,0l0,110.777772z"
+                              p-id="8101"></path>
+                    </svg>
+                </div>
+                <div id="switchMapStyle" onclick="switchMapStyle();">
+                    <svg t="1605159422980" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4353" width="32" height="32">
+                        <path fill="#484D55"
+                              d="M234.0864 65.8432L51.2 234.0352l168.2432 182.8864 563.2 607.0784 182.8352-160.9216zM124.3648 234.0352l102.4-87.7568 102.4 102.4-102.4 87.7568-102.4-102.4z m248.6784 599.808l-29.2352 65.8432-65.8432 7.3216 51.2 43.8784L314.5216 1024l58.5216-29.2352L431.5648 1024l-7.3216-73.1648 43.8784-51.2-65.8432-7.3216-29.2352-58.5216z m-226.7648-299.8784l-43.8784 102.4-102.4 14.6432 73.1648 73.1648-14.6432 109.7216 87.7568-51.2 87.7568 51.2-14.6432-109.7216 73.1648-73.1648-102.4-14.6432zM819.2 0l-58.5216 131.6352L621.7216 153.6l102.4 102.4-21.9648 146.2784 124.3648-73.1648 124.3648 73.1648L928.9216 256 1024 153.6l-138.9568-21.9648L819.2 0z"
+                              p-id="4354"></path>
+                    </svg>
+                </div>
+                <div id="switchDirection" onclick="switchDirection();">
+                    <svg t="1605145114922" class="icon" viewBox="0 0 1080 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1186" width="32" height="32">
+                        <path d="M0 0h625.777778v739.555556H0z" fill="#F6F7F8" p-id="1187"></path>
+                        <path d="M0 739.555556V0h625.777778v739.555556H0zM568.888889 56.888889H56.888889v625.777778h512V56.888889z" fill="#484D55" p-id="1188"></path>
+                        <path d="M398.222222 455.111111h682.666667v568.888889H398.222222z" fill="#F6F7F8" p-id="1189"></path>
+                        <path d="M398.222222 1024V455.111111h682.666667v568.888889H398.222222z m625.777778-512H455.111111v455.111111h568.888889V512z" fill="#484D55" p-id="1190"></path>
+                        <path d="M1080.888889 56.888889v142.222222a28.444444 28.444444 0 0 1-56.888889 0V56.888889h-142.222222a28.444444 28.444444 0 0 1 0-56.888889H1080.888889v56.888889zM199.111111 1024H0v-28.444444-170.951112a28.444444 28.444444 0 0 1 56.888889 0V967.111111h142.222222a28.444444 28.444444 0 0 1 0 56.888889z"
+                              fill="#484D55" p-id="1191"></path>
+                    </svg>
+                </div>
+                <div id="zoomUp" onclick="zoomUp();">
+                    <svg t="1605165558990" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1688" width="32" height="32">
+                        <path d="M768 448a320 320 0 1 0-320 320 320 320 0 0 0 320-320z m64 0A384 384 0 1 1 448 64a384 384 0 0 1 384 384z" p-id="1689" fill="#484D55"></path>
+                        <path d="M681.28 726.72a32 32 0 0 1 45.44-45.44l160 160a32 32 0 0 1-45.44 45.44zM320 480a32 32 0 0 1 0-64h256a32 32 0 0 1 0 64z" p-id="1690" fill="#484D55"></path>
+                        <path d="M480 576a32 32 0 0 1-64 0v-256a32 32 0 0 1 64 0z" p-id="1691" fill="#484D55"></path>
+                    </svg>
+                </div>
+                <div id="zoomDown" onclick="zoomDown();">
+                    <svg t="1605165657200" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1972" width="32" height="32">
+                        <path d="M768 448a320 320 0 1 0-320 320 320 320 0 0 0 320-320z m64 0A384 384 0 1 1 448 64a384 384 0 0 1 384 384z" p-id="1973" fill="#484D55"></path>
+                        <path d="M681.28 726.72a32 32 0 0 1 45.44-45.44l160 160a32 32 0 0 1-45.44 45.44zM288 480a32 32 0 0 1 0-64h320a32 32 0 0 1 0 64z" p-id="1974" fill="#484D55"></path>
+                    </svg>
+                </div>
             </div>
-            <div id="searchResultPanel1" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
-            <svg id="switch" onclick="switchDirection();" t="1605145114922" class="icon" viewBox="0 0 1080 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1186" width="48" height="48">
-                <path d="M0 0h625.777778v739.555556H0z" fill="#F6F7F8" p-id="1187"></path>
-                <path d="M0 739.555556V0h625.777778v739.555556H0zM568.888889 56.888889H56.888889v625.777778h512V56.888889z" fill="#484D55" p-id="1188"></path>
-                <path d="M398.222222 455.111111h682.666667v568.888889H398.222222z" fill="#F6F7F8" p-id="1189"></path>
-                <path d="M398.222222 1024V455.111111h682.666667v568.888889H398.222222z m625.777778-512H455.111111v455.111111h568.888889V512z" fill="#484D55" p-id="1190"></path>
-                <path d="M1080.888889 56.888889v142.222222a28.444444 28.444444 0 0 1-56.888889 0V56.888889h-142.222222a28.444444 28.444444 0 0 1 0-56.888889H1080.888889v56.888889zM199.111111 1024H0v-28.444444-170.951112a28.444444 28.444444 0 0 1 56.888889 0V967.111111h142.222222a28.444444 28.444444 0 0 1 0 56.888889z"
-                      fill="#484D55" p-id="1191"></path>
-            </svg>
-        </div>
-        <div id="map2_container">
-            <div id="allmap2"></div>
-            <div id="r-result2">
-                <input type="text" id="suggestId2" size="20" placeholder="请输入地址" style="width:150px;"/>
+            <div id="map2_container">
+                <div id="map2"></div>
+                <div id="map2-search">
+                    <input type="text" id="map2-search-input" size="20" placeholder="请输入地址" style="width:150px;"/>
+                    <div id="map2-search-result" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+                </div>
             </div>
-            <div id="searchResultPanel2" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
         </div>
     </body>
 </html>
@@ -115,82 +170,497 @@
         }
     }
 
-    // 加载第一张地图
-    var map1 = new BMapGL.Map('allmap1'); // 创建Map实例1
-    map1.centerAndZoom(new BMapGL.Point(centerAndZoom1[0], centerAndZoom1[1]), centerAndZoom1[2]);
-    map1.enableScrollWheelZoom(true);
-    map1.addControl(new BMapGL.ScaleControl()); // 添加比例尺控件
+    // 初始化地图
+    var map1 = createMap("map1", centerAndZoom1[0], centerAndZoom1[1], centerAndZoom1[2]);
+    var map2 = createMap("map2", centerAndZoom2[0], centerAndZoom2[1], centerAndZoom2[2]);
+
+    // 初始化搜索框
+    map1.initSearchInput();
+    map2.initSearchInput();
+
+    // 初始化同比缩放
     map1.addEventListener("zoomend", throttle(function (evt) {
         if (evt && evt.currentTarget && evt.currentTarget.zoomLevel) {
             map2.zoomTo(evt.currentTarget.zoomLevel);
         }
     }, 500));
-    initSearchInput(map1, "suggestId1", "searchResultPanel1");
-
-
-    // 加载第二张地图
-    var map2 = new BMapGL.Map('allmap2'); // 创建Map实例2
-    map2.centerAndZoom(new BMapGL.Point(centerAndZoom2[0], centerAndZoom2[1]), centerAndZoom2[2]);
-    map2.enableScrollWheelZoom(true);
-    map2.addControl(new BMapGL.ScaleControl()); // 添加比例尺控件
     map2.addEventListener("zoomend", throttle(function (evt) {
         if (evt && evt.currentTarget && evt.currentTarget.zoomLevel) {
             map1.zoomTo(evt.currentTarget.zoomLevel);
         }
     }, 500));
-    initSearchInput(map2, "suggestId2", "searchResultPanel2");
+
+    // 切换屏幕的分割方向
+    function switchDirection() {
+        var bodyD = document.getElementById("map_container");
+        if (bodyD.style["flex-direction"] == "" || bodyD.style["flex-direction"] == "column") {
+            bodyD.style["flex-direction"] = "row";
+        } else {
+            bodyD.style["flex-direction"] = "column";
+        }
+    }
+
+    // 切换地图样式
+    var styles = {
+        select: "normal",
+        normal: {
+            styleJson: []
+        },
+        bigFont: {
+            styleJson: [
+                // 关闭所有
+                {
+                    "featureType": "districtlabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "districtlabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "road",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "road",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "highwaysign",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "highwaysign",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "nationalwaysign",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "nationalwaysign",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "provincialwaysign",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "provincialwaysign",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "tertiarywaysign",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }, {
+                    "featureType": "tertiarywaysign",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                },
+
+                // 标注公路
+                {
+                    "featureType": "highway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "nationalway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "provincialway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "cityhighway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "arterial",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "tertiaryway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "fourlevelway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "local",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                },
+
+                // 标注地铁
+                {
+                    "featureType": "subway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                },
+
+                // 标注市区县
+                {
+                    "featureType": "city",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "city",
+                    "elementType": "labels.text",
+                    "stylers": {
+                        "fontsize": 80
+                    }
+                }, {
+                    "featureType": "city",
+                    "elementType": "labels.text.fill",
+                    "stylers": {
+                        "color": "#000000ff"
+                    }
+                }, {
+                    "featureType": "district",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "district",
+                    "elementType": "labels.text",
+                    "stylers": {
+                        "fontsize": 60
+                    }
+                }, {
+                    "featureType": "district",
+                    "elementType": "labels.text.fill",
+                    "stylers": {
+                        "color": "#f01414b3"
+                    }
+                },
+
+                // 标注车站和机场
+                {
+                    "featureType": "transportationlabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "transportationlabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "transportationlabel",
+                    "elementType": "labels.text",
+                    "stylers": {
+                        "fontsize": 50
+                    }
+                }, {
+                    "featureType": "airportlabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "airportlabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "airportlabel",
+                    "elementType": "labels.text",
+                    "stylers": {
+                        "fontsize": 50
+                    }
+                },
 
 
-    function initSearchInput(map, suggestInputId, searchResultPanelId) {
-        function G(id) {
-            return document.getElementById(id);
+                // 兴趣点
+
+                {
+                    "featureType": "poilabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "on"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels.text",
+                    "stylers": {
+                        "fontsize": 40
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "9"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "10"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "11"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "12"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "13"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "9"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "10"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "11"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "12"
+                    }
+                }, {
+                    "featureType": "poilabel",
+                    "elementType": "labels.icon",
+                    "stylers": {
+                        "visibility": "off",
+                        "level": "13"
+                    }
+                }
+
+            ]
+        }
+    };
+
+    function switchMapStyle() {
+        if (styles.select == "normal") {
+            styles.select = "bigFont";
+        } else {
+            styles.select = "normal";
+        }
+        map1.setMapStyleV2(styles[styles.select]);
+        setTimeout(() => map2.setMapStyleV2(styles[styles.select]), 500);
+    }
+
+
+    // 交换两幅地图的位置
+    var firstContainer = 1;
+
+    function swapContainer() {
+        var a1 = document.getElementById("map1_container");
+        var a2 = document.getElementById("map2_container");
+        if (firstContainer == 1) {
+            a1.parentNode.insertBefore(a2, a1);
+            firstContainer = 2;
+        } else {
+            a2.parentNode.insertBefore(a1, a2);
+            firstContainer = 1;
+        }
+    }
+
+    // 缩放微调
+    function zoomUp() {
+        var zoom = map1.getZoom() + 0.05;
+        map1.zoomTo(zoom);
+        map2.zoomTo(zoom);
+    }
+
+    function zoomDown() {
+        var zoom = map1.getZoom() - 0.05;
+        map1.zoomTo(zoom);
+        map2.zoomTo(zoom);
+    }
+
+    // 创建地图
+    function createMap(mapDivId, x, y, zoom, mayStyle, labelStyle, boundaryStyle) {
+
+        // GL版命名空间为BMapGL
+        // 按住鼠标右键，修改倾斜角和角度
+        var map = new BMapGL.Map(mapDivId);    // 创建Map实例
+        map.centerAndZoom(new BMapGL.Point(x, y), zoom);  // 初始化地图,设置中心点坐标和地图级别
+        map.enableScrollWheelZoom(true);     //标注鼠标滚轮缩放
+        map.addControl(new BMapGL.ScaleControl()); // 添加比例尺控件
+
+        // 自定义文本标注样式
+        if (mayStyle) {
+            map.setMapStyleV2(mayStyle);
         }
 
-        //建立一个自动完成的对象
-        var ac = new BMapGL.Autocomplete({
-            "input": suggestInputId, "location": map
-        });
-
-        ac.addEventListener("onhighlight", function (e) {  //鼠标放在下拉列表上的事件
-            var str = "";
-            var _value = e.fromitem.value;
-            var value = "";
-            if (e.fromitem.index > -1) {
-                value = _value.province + _value.city + _value.district + _value.street + _value.business;
+        // 标注函数
+        map.markPoint = function (x, y, lable) {
+            var m = new BMapGL.Marker(new BMapGL.Point(x, y));
+            if (lable) {
+                var l = new BMapGL.Label(lable);
+                if (labelStyle) {
+                    l.setStyle(labelStyle);
+                }
+                m.setLabel(l);
             }
-            str = "FromItem<br />index = " + e.fromitem.index + "<br />value = " + value;
+            map.addOverlay(m);
+        };
 
-            value = "";
-            if (e.toitem.index > -1) {
-                _value = e.toitem.value;
-                value = _value.province + _value.city + _value.district + _value.street + _value.business;
-            }
-            str += "<br />ToItem<br />index = " + e.toitem.index + "<br />value = " + value;
-            G(searchResultPanelId).innerHTML = str;
-        });
-
-        var myValue;
-        ac.addEventListener("onconfirm", function (e) {    //鼠标点击下拉列表后的事件
-            var _value = e.item.value;
-            myValue = _value.province + _value.city + _value.district + _value.street + _value.business;
-            G(searchResultPanelId).innerHTML = "onconfirm<br />index = " + e.item.index + "<br />myValue = " + myValue;
-
-            setPlace();
-        });
-
-        function setPlace() {
-            map.clearOverlays();    //清除地图上所有覆盖物
-            function myFun() {
-                var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
-                map.panTo(pp);
-                map.addOverlay(new BMapGL.Marker(pp));    //添加标注
-            }
-
-            var local = new BMapGL.LocalSearch(map, { //智能搜索
-                onSearchComplete: myFun
+        // 边界函数
+        var bdary = new BMapGL.Boundary();
+        map.drawBoundary = function (place) {
+            bdary.get(place, function (rs) {       //获取行政区域
+                var count = rs.boundaries.length; //行政区域的点有多少个
+                if (count === 0) {
+                    alert('未能获取当前输入行政区域');
+                    return;
+                }
+                var pointArray = [];
+                for (var i = 0; i < count; i++) {
+                    //建立多边形覆盖物
+                    var ply = new BMapGL.Polygon(rs.boundaries[i], boundaryStyle);
+                    map.addOverlay(ply);  //添加覆盖物
+                    pointArray = pointArray.concat(ply.getPath());
+                }
             });
-            local.search(myValue);
-        }
+        };
+
+        // 搜索框初始化函数
+        map.initSearchInput = function (suggestInputId, searchResultPanelId) {
+
+            if (!suggestInputId) suggestInputId = mapDivId + "-search-input";
+            if (!searchResultPanelId) searchResultPanelId = mapDivId + "-search-result";
+
+            function G(id) {
+                return document.getElementById(id);
+            }
+
+            //建立一个自动完成的对象
+            var ac = new BMapGL.Autocomplete({
+                "input": suggestInputId, "location": map
+            });
+
+            ac.addEventListener("onhighlight", function (e) {  //鼠标放在下拉列表上的事件
+                var str = "";
+                var _value = e.fromitem.value;
+                var value = "";
+                if (e.fromitem.index > -1) {
+                    value = _value.province + _value.city + _value.district + _value.street + _value.business;
+                }
+                str = "FromItem<br />index = " + e.fromitem.index + "<br />value = " + value;
+
+                value = "";
+                if (e.toitem.index > -1) {
+                    _value = e.toitem.value;
+                    value = _value.province + _value.city + _value.district + _value.street + _value.business;
+                }
+                str += "<br />ToItem<br />index = " + e.toitem.index + "<br />value = " + value;
+                G(searchResultPanelId).innerHTML = str;
+            });
+
+            var myValue;
+            ac.addEventListener("onconfirm", function (e) {    //鼠标点击下拉列表后的事件
+                var _value = e.item.value;
+                myValue = _value.province + _value.city + _value.district + _value.street + _value.business;
+                G(searchResultPanelId).innerHTML = "onconfirm<br />index = " + e.item.index + "<br />myValue = " + myValue;
+
+                setPlace();
+            });
+
+            function setPlace() {
+                function myFun() {
+                    var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
+                    map.centerAndZoom(pp, 18);
+                    map.addOverlay(new BMapGL.Marker(pp));    //添加标注
+                }
+
+                var local = new BMapGL.LocalSearch(map, { //智能搜索
+                    onSearchComplete: myFun
+                });
+                local.search(myValue);
+            }
+        };
+
+        return map;
     }
 
     function throttle(fun, delay) {
@@ -210,15 +680,6 @@
             } else {
                 timer = setTimeout(fun, remaining);  // 如果两次触发时间小于delay， 则改变定时器时间保证delay时间一定触发任务函数
             }
-        }
-    }
-
-    function switchDirection() {
-        var bodyD = document.getElementsByTagName("body")[0];
-        if (bodyD.style["flex-direction"] == "" || bodyD.style["flex-direction"] == "column") {
-            bodyD.style["flex-direction"] = "row";
-        } else {
-            bodyD.style["flex-direction"] = "column";
         }
     }
 
