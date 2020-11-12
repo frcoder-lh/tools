@@ -8,7 +8,6 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-        <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=9kKan8hqL7ufdILQDNIsMKPcqzTGaYzb"></script>
 
         <style>
             body,
@@ -18,14 +17,15 @@
                 height: 100%;
                 margin: 0;
                 font-family: "微软雅黑";
+                display: -webkit-flex; /* Safari */
+                display: flex;
+                flex-direction: column;
             }
 
             #map1_container,
             #map2_container {
-                float: left;
+                flex: 1;
                 overflow: hidden;
-                width: 100%;
-                height: 50%;
                 margin: 0;
                 position: relative;
             }
@@ -52,7 +52,16 @@
             .tangram-suggestion-main {
                 z-index: 100;
             }
+
+            #switch {
+                position: absolute;
+                bottom: 5px;
+                right: 5px;
+                z-index: 100;
+            }
         </style>
+
+        <script src="http://api.map.baidu.com/api?type=webgl&v=1.0&ak=9kKan8hqL7ufdILQDNIsMKPcqzTGaYzb"></script>
 
     </head>
     <body>
@@ -62,6 +71,14 @@
                 <input type="text" id="suggestId1" size="20" placeholder="请输入地址" style="width:150px;"/>
             </div>
             <div id="searchResultPanel1" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+            <svg id="switch" onclick="switchDirection();" t="1605145114922" class="icon" viewBox="0 0 1080 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1186" width="48" height="48">
+                <path d="M0 0h625.777778v739.555556H0z" fill="#F6F7F8" p-id="1187"></path>
+                <path d="M0 739.555556V0h625.777778v739.555556H0zM568.888889 56.888889H56.888889v625.777778h512V56.888889z" fill="#484D55" p-id="1188"></path>
+                <path d="M398.222222 455.111111h682.666667v568.888889H398.222222z" fill="#F6F7F8" p-id="1189"></path>
+                <path d="M398.222222 1024V455.111111h682.666667v568.888889H398.222222z m625.777778-512H455.111111v455.111111h568.888889V512z" fill="#484D55" p-id="1190"></path>
+                <path d="M1080.888889 56.888889v142.222222a28.444444 28.444444 0 0 1-56.888889 0V56.888889h-142.222222a28.444444 28.444444 0 0 1 0-56.888889H1080.888889v56.888889zM199.111111 1024H0v-28.444444-170.951112a28.444444 28.444444 0 0 1 56.888889 0V967.111111h142.222222a28.444444 28.444444 0 0 1 0 56.888889z"
+                      fill="#484D55" p-id="1191"></path>
+            </svg>
         </div>
         <div id="map2_container">
             <div id="allmap2"></div>
@@ -104,7 +121,7 @@
     map1.enableScrollWheelZoom(true);
     map1.addControl(new BMapGL.ScaleControl()); // 添加比例尺控件
     map1.addEventListener("zoomend", throttle(function (evt) {
-        if (evt.currentTarget || evt.currentTarget.zoomLevel) {
+        if (evt && evt.currentTarget && evt.currentTarget.zoomLevel) {
             map2.zoomTo(evt.currentTarget.zoomLevel);
         }
     }, 500));
@@ -117,7 +134,7 @@
     map2.enableScrollWheelZoom(true);
     map2.addControl(new BMapGL.ScaleControl()); // 添加比例尺控件
     map2.addEventListener("zoomend", throttle(function (evt) {
-        if (evt.currentTarget || evt.currentTarget.zoomLevel) {
+        if (evt && evt.currentTarget && evt.currentTarget.zoomLevel) {
             map1.zoomTo(evt.currentTarget.zoomLevel);
         }
     }, 500));
@@ -165,8 +182,8 @@
             map.clearOverlays();    //清除地图上所有覆盖物
             function myFun() {
                 var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
-                map.centerAndZoom(pp, 18);
-                map.addOverlay(new BMap.Marker(pp));    //添加标注
+                map.panTo(pp);
+                map.addOverlay(new BMapGL.Marker(pp));    //添加标注
             }
 
             var local = new BMapGL.LocalSearch(map, { //智能搜索
@@ -193,6 +210,15 @@
             } else {
                 timer = setTimeout(fun, remaining);  // 如果两次触发时间小于delay， 则改变定时器时间保证delay时间一定触发任务函数
             }
+        }
+    }
+
+    function switchDirection() {
+        var bodyD = document.getElementsByTagName("body")[0];
+        if (bodyD.style["flex-direction"] == "" || bodyD.style["flex-direction"] == "column") {
+            bodyD.style["flex-direction"] = "row";
+        } else {
+            bodyD.style["flex-direction"] = "column";
         }
     }
 
