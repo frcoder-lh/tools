@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <title>AutoScript</title>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <script language="javascript">
+
+            var qs = location.search.substr(1).split('&');
+            if (qs) {
+                for (var i = 0; i < qs.length; i++) {
+                    var kv = qs[i].split('=');
+                    switch (kv[0]) {
+                        case "name": {
+                            console.info("执行脚本：" + kv[1]);
+                            run(kv[1]);
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            function run(name) {
+                fetch("https://i2egbesf.lc-cn-n1-shared.com/1.1/classes/autoscript?-updatedAt&keys=-createdAt%2C-updatedAt%2C-objectId&where=%7B%22name%22%3A%22" + name + "%22%7D",
+                    {
+                        headers: {
+                            "x-lc-id": "I2EgBESFxAuSNOW4v52ggS4W-gzGzoHsz",
+                            "x-lc-key": "aJt40nloKDM6qfhUL7dNOqUy",
+                        },
+                    }
+                ).then(function (res) {
+                    return res.json();
+                }).then(function (response) {
+                    if (isExtensionLoaded()) {
+                        if (response.results.length > 0) {
+                            window.dispatchEvent(new CustomEvent('kantuSaveAndRunMacro', {
+                                detail: {
+                                    direct: 1,
+                                    json: response.results[0].command
+                                }
+                            }));
+                        } else {
+                            alert("AutoScript No Exist")
+                        }
+                    } else {
+                        var a = document.createElement('a');
+                        a.download = "auto-script";
+                        a.href = "https://chrome.google.com/webstore/detail/kantu-browser-automation/gcbalfbdmfieckjlnblleoemohcganoc";
+                        a.click();
+                    }
+                });
+
+                function isExtensionLoaded() {
+                    var $root = document.documentElement;
+                    return !!$root && !!$root.getAttribute('data-kantu');
+                }
+            }
+
+        </script>
+    </body>
+</html>
