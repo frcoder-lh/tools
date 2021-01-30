@@ -1,0 +1,349 @@
+<html>
+<head>
+    <title>CHAT</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <style type="text/css">
+
+        * {
+            font-size: 12px;
+        }
+
+        body {
+            padding: 0;
+            margin: 0;
+            overflow-y: scroll;
+            background: #2b303b;
+            color: #c0c5ce;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+
+        .container {
+            width: 600px;
+            height: 100%;
+            margin: 0 auto;
+            border-left: 1px solid #65737e80;
+            border-right: 1px solid #65737e80;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #messages {
+            padding-top: 1em;
+            overflow-y: auto;
+            flex-grow: 3;
+        }
+
+        .message {
+            padding: 1em;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .receive {
+            color: #9adaa1;
+        }
+
+        .send {
+            color: #b2c8df;
+            text-align: right;
+        }
+
+        .lable {
+            white-space: nowrap;
+            overflow: hidden;
+            padding-bottom: 1em;
+        }
+
+        .lable-tip {
+            color: #677785;
+            font-size: 10px;
+        }
+
+        .content {
+        }
+
+        #userSelect,
+        #userSelect option {
+            background: #2b303b;
+            border-left: none;
+            border-right: none;
+            outline: none;
+            resize: none;
+            color: #b2c8df;
+            height: 2em;
+        }
+
+        input,
+        textarea {
+            background: none;
+            border: none;
+            outline: none;
+            resize: none;
+            color: #c0c5ce;
+        }
+
+        #chatinput {
+            flex-shrink: 0;
+            flex-basis: 25%;
+            padding: 1em;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 600px;
+            border-top: 1px solid #65737e80;
+        }
+
+        /* 设置滚动条的样式 */
+        ::-webkit-scrollbar {
+            width: 0.1em;
+        }
+
+        /* 滚动槽 */
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        /* 滚动条滑块 */
+        ::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            background: #525c71;
+            -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb:window-inactive {
+            background: rgba(255, 0, 0, 0.4);
+        }
+
+        @media screen and (max-device-width: 960px) {
+            .container {
+                height: 600px;
+            }
+
+            #chatinput {
+                border-top: 1px solid #65737e;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="messages" class="messages"></div>
+    <select id="userSelect"></select>
+    <textarea id="chatinput" type="text" autocomplete="off" autofocus></textarea>
+</div>
+</body>
+<script type="text/javascript">
+
+    if (typeof (Notification) != "undefined" && Notification.permission != 'granted') {
+        Notification.requestPermission();
+    }
+
+    var to = location.search.substr(1);
+    while (!to) {
+        alert("非法请求！");
+    }
+    var mynick = localStorage.getItem("masternick");
+    if (mynick && !confirm(`是否使用上次的昵称【${mynick}】登录`)) mynick = null;
+    while (!mynick) {
+        mynick = prompt("请输入昵称：");
+        if (mynick) mynick = mynick.trim();
+    }
+    localStorage.setItem("masternick", mynick);
+
+    var onlineUsers = ["系统"];
+    refreshUserSelect();
+
+    var chatinput = document.getElementById("chatinput");
+    chatinput.onkeydown = function (event) {
+        event = event || window.event;
+        var key = event.which || event.keyCode || event.charCode;
+        if (key == 13) { // 监听回车
+            var content = chatinput.value.trim();
+            if (content) send(content);
+            chatinput.value = "";
+            event.returnValue = false;
+        }
+    };
+
+    function send(content) {
+        var text = a(JSON.stringify({from: mynick, role: "master", to: document.getElementById("userSelect").value, content: content}));
+        wssend({cmd: "chat", text: text});
+    }
+
+    function receive(msg) {
+        var messageDiv = document.createElement("div");
+        messageDiv.className = "message " + (msg.role == "master" ? "send" : "receive");
+        messageDiv.style.cssText = 'color:' + str2color(msg.from);
+        messageDiv.innerHTML =
+            `
+                    <div class="lable">
+                        <span class="lable-tip">${new Date(msg.time).toLocaleString()}</span>
+                        <span class="nick">${msg.from + (msg.role == "master" ? "<span class='lable-tip'>@</span>" + msg.to : "")}</span>
+                    </div>
+                    <div class="content">
+                        <span>${msg.content}</span>
+                    </div>
+                `;
+        var messages = document.getElementById("messages");
+        messages.appendChild(messageDiv);
+        messages.scrollTop = messages.scrollHeight;
+        if (msg.from != mynick) notification(msg.content);
+    }
+
+    function receiveSystemMsg(content) {
+        receive({from: '系统', content: content, time: new Date().getTime()});
+    }
+
+    function refreshUserSelect() {
+        var userList = ["系统"].concat(onlineUsers);
+        var userSelect = document.getElementById("userSelect");
+        userSelect.innerHTML = "";
+        for (let user of userList) {
+            var userOption = document.createElement("option");
+            userOption.innerHTML = user;
+            userSelect.appendChild(userOption);
+        }
+    }
+
+
+    var clientName = "[十字街网页版](https://crosst.chat/)";
+    var clientKey = "/bG0bpXTJVKgQ58";
+
+    var ws = new WebSocket('wss://ws.crosst.chat:35197/');
+
+    function wssend(data) {
+        if (ws && ws.readyState == ws.OPEN) {
+            ws.send(JSON.stringify(data));
+        }
+    }
+
+    ws.onerror = function (event) {
+        console.error("ws is error: ", event);
+    };
+
+    ws.onopen = function () {
+        wssend({cmd: 'join', channel: to, nick: mynick, clientName, clientKey});
+    };
+
+    ws.onclose = function () {
+        receiveSystemMsg("与服务器的连接已断开，请刷新重试。");
+    };
+
+    ws.onmessage = function (message) {
+        var args = JSON.parse(message.data);
+        var cmd = args.cmd;
+        if (COMMANDS[cmd]) COMMANDS[cmd](args);
+    };
+
+    var COMMANDS = {
+        chat: function (args) {
+            var msg = JSON.parse(b(args.text));
+            msg.time = args.time;
+            receive(msg);
+        },
+
+        warn: function (args) {
+            alert("昵称已被使用，请尝试其它昵称！");
+            location.reload();
+        },
+
+        onlineSet: function (args) {
+            onlineUsers = args.nicks;
+            receiveSystemMsg(`当前在线【${onlineUsers.length}】：${onlineUsers}`);
+            refreshUserSelect();
+        },
+
+        onlineAdd: function (args) {
+            onlineUsers.push(args.nick);
+            receiveSystemMsg(`【${args.nick}】已上线，当前在线【${onlineUsers.length}】：${onlineUsers}`);
+            refreshUserSelect();
+        },
+
+        onlineRemove: function (args) {
+            for (var i = 0; i < onlineUsers.length; i++) {
+                if (onlineUsers[i] == args.nick) {
+                    onlineUsers.splice(i, 1);
+                    break;
+                }
+            }
+            receiveSystemMsg(`【${args.nick}】已下线，当前在线【${onlineUsers.length}】：${onlineUsers}`);
+            refreshUserSelect();
+        }
+    };
+
+
+    function str2color(str) {
+        var color = 0;
+        if (str) {
+            for (var i = 0; i < str.length; i++) {
+                color += str.charCodeAt(i);
+            }
+            color %= 360;
+        }
+        return `hsl(${color},50%,90%)`;
+    }
+
+    function a(str) {
+        str = btoa(encodeURIComponent(str));
+        var eqi = str.indexOf("=");
+        var eqn, chars;
+        if (eqi != -1) {
+            eqn = str.length - eqi;
+            chars = str.slice(0, eqi).split("");
+        } else {
+            eqn = 0;
+            chars = str.split("");
+        }
+        var i = 0, j = chars.length - 1;
+        if (j % 2 != 0) j--;
+        while (i < j) {
+            var tmp = chars[i];
+            chars[i] = chars[j];
+            chars[j] = tmp;
+            i += 2;
+            j -= 2;
+        }
+        return String.fromCharCode(65 + Math.ceil(Math.random() * 25)) + eqn + chars.join("");
+    }
+
+    function b(str) {
+        var eqn = str[1];
+        var chars = str.slice(2).split("");
+        var i = 0, j = chars.length - 1;
+        if (j % 2 != 0) j--;
+        while (i < j) {
+            var tmp = chars[i];
+            chars[i] = chars[j];
+            chars[j] = tmp;
+            i += 2;
+            j -= 2;
+        }
+        var result = chars.join("");
+        for (var i = 0; i < eqn; i++) {
+            result += "=";
+        }
+        return decodeURIComponent(atob(result));
+    }
+
+
+    function notification(content) {
+        if(typeof (Notification) != "undefined"){
+            new Notification("新消息", {
+                body: content,
+                renotify: false,
+                silent: false,
+                vibrate: [500, 300, 400, 300]
+            });
+        }
+    }
+
+</script>
+</html>
