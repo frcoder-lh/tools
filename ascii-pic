@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>AsciiPic</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    </head>
+    <body>
+        <div>
+            <label for="file">图像文件：</label>
+            <input type="file" name="file" id="file"/>
+        </div>
+        <div>
+            <label for="content">色阶对应的文字：</label>
+            <input name="content" id="content" value="你好"/>
+        </div>
+        <div>
+            <label for="size">像素点数量的缩小比例：<span id="sizeValue">0.1</span></label>
+            <input type="range" min=0.01 max=1 step=0.01 value=0.1 name="size" id="size"/>
+        </div>
+        <div>
+            <label for="fontSize">字体大小：<span id="fontSizeValue">25</span>px</label>
+            <input type="range" min=5 max=50 step=1 value=25 name="fontSize" id="fontSize"/>
+        </div>
+        <div>
+            <button id="convert" onclick="convertPic()">转换</button>
+            <button id="savePic" onclick="convertToImage()">保存ASCII图片</button>
+        </div>
+
+
+    </body>
+
+
+    <script>
+
+        function filetoDataURL(file, fn) {
+            var reader = new FileReader();
+            reader.onloadend = function (e) {
+                fn(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function bindRangeInput(rangeInputId, rangeValueId) {
+            // 获取元素
+            const rangeInput = document.getElementById(rangeInputId);
+            const rangeValue = document.getElementById(rangeValueId);
+
+            // 监听滑动条的 input 事件
+            rangeInput.addEventListener('input', function () {
+                // 将滑动条的值更新到 span
+                rangeValue.textContent = this.value;
+            });
+        }
+
+        bindRangeInput("size", "sizeValue");
+        bindRangeInput("fontSize", "fontSizeValue");
+
+
+        var converting = 0;
+        var saving = 0;
+
+        function convertPic() {
+            if (converting > 0) {
+                alert("正在转换，请稍后。。。");
+                return;
+            }
+
+            const preDivs = document.getElementsByTagName('pre');
+            if (preDivs.length > 0) {
+                preDivs[0].remove(); // 移除div
+            }
+
+            let pics = document.getElementById('file');
+            let content = document.getElementById("content").value;
+            let size = document.getElementById("size").value;
+            let fontSize = document.getElementById("fontSize").value;
+
+            if (pics.files.length == 0) {
+                alert("请先上传文件");
+                return;
+            }
+
+            converting++;
+            filetoDataURL(pics.files[0], display);
+
+            function display(imageUrl) {
+                let eu = new imgToAscii(imageUrl, size, content);
+                eu.displayColor(fontSize).then((result) => {
+                    converting -= 1;
+                });
+            }
+        }
+
+        function convertToImage() {
+            if (saving > 0) {
+                alert("正在保存，请稍后。。。");
+                return;
+            }
+
+            saving++;
+            const divs = document.getElementsByTagName('pre');
+
+            // 使用 html2canvas 将 div 渲染为 Canvas
+            html2canvas(divs[0]).then(canvas => {
+                // 将 Canvas 转换为图片
+                const image = canvas.toDataURL('image/png');
+
+                // 创建一个链接用于下载图片
+                const link = document.createElement('a');
+                link.href = image;
+                link.download = 'ASCII图片.png'; // 下载文件名
+                link.click();
+
+                // 或者直接在页面中显示图片
+                // const imgElement = document.createElement('img');
+                // imgElement.src = image;
+                // document.body.appendChild(imgElement);
+
+                saving--;
+            });
+        }
+
+
+        class imgToAscii {
+            constructor(image, size, content, charType) {
+                this.size = (size <= 0 || size > 1 ? 1 : size) || 1;
+                this.charType = charType || 0;
+                this.alphabet = {
+                    0: [...content]
+                }
+                this.string = "";
+                this.stringColor = "";
+                this.imageSrc = image;
+                this.loadImage = new Promise((resolve, reject) => {
+                    this.image = new Image();
+                    this.image.src = this.imageSrc;
+                    this.image.onload = () => {
+                        this.canvas = document.createElement('canvas');
+                        this.canvas.width = this.image.width * this.size;
+                        this.canvas.height = this.image.height * this.size;
+                        this.context = this.canvas.getContext('2d');
+                        this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+                        this.imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                        let grayStep = Math.ceil(255 / this.alphabet[this.charType].length);
+                        for (let i = 0; i < this.imageData.data.length; i += 4) {
+                            for (let j = 0; j < this.alphabet[this.charType].length; j++) {
+                                let r = this.imageData.data[i];
+                                let g = this.imageData.data[i + 1];
+                                let b = this.imageData.data[i + 2];
+                                if ((r * 0.2126) + (g * 0.7152) + (b * 0.0722) < (j + 1) * grayStep) {
+                                    const char = this.alphabet[this.charType][j];
+                                    this.string += char
+                                    this.stringColor += "<span style=\"color: rgb(" + r + "," + g + "," + b + "); \">"
+                                        + (char.replace(' ', '&nbsp;'))
+                                        + "</span>";
+                                    break;
+                                }
+                            }
+                            if (!((i / 4 + 1) % this.canvas.width)) {
+                                this.string += "\n";
+                                this.stringColor += "<br>";
+                            }
+                        }
+                        resolve();
+                    };
+                    this.image.error = reject;
+                }).catch(e => console.error(e));
+            }
+
+            getPreElement(fontSize) {
+                const pre = document.createElement('pre');
+                pre.style.fontFamily = "Courier, monospace";
+                pre.style.lineHeight = fontSize + "px";
+                pre.style.fontSize = fontSize + "px";
+                pre.style.fontWeight = "bold";
+                pre.style.display = "inline-block";
+                return pre
+            }
+
+            async display(fontSize, appendToBody = true) {
+                const pre = this.getPreElement(fontSize);
+                if (appendToBody)
+                    document.body.appendChild(pre);
+                await this.loadImage;
+                pre.innerText = this.string;
+                if (!appendToBody)
+                    return pre
+            }
+
+            async displayColor(fontSize, bg, appendToBody = true) {
+                const pre = this.getPreElement(fontSize);
+                pre.style.backgroundColor = bg;
+                if (appendToBody)
+                    document.body.appendChild(pre);
+                await this.loadImage;
+                pre.innerHTML = this.stringColor;
+                if (!appendToBody)
+                    return pre
+            }
+
+        }
+
+    </script>
+</html>
