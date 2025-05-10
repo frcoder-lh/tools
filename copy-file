@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文件复制工具</title>
+    <script crossorigin="anonymous"
+            integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+            referrerpolicy="no-referrer"
+            src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script crossorigin="anonymous"
+            integrity="sha512-XbzqqqogVHe2RPEnKNxzuW+57fuEDGL4O6wdxh/W75oJjbgpwa1KHB4XpUZ2rMT/hhRUI1L1n9hNpMvSJb6DiA=="
+            referrerpolicy="no-referrer"
+            src="https://cdnjs.cloudflare.com/ajax/libs/store.js/2.0.1/store.legacy.min.js"></script>
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+          integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" rel="stylesheet">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <style>
+    </style>
+</head>
+<body>
+<div class="pure-g" style="height:95vh;padding:10px">
+    <div class="pure-u-1-5" style="height:100%">
+        <span class="pure-menu-heading" style="font-weight:bolder;background-color:#7f8080;color:aliceblue">常用</span>
+        <div style="height:100%;border-right:thin dashed #515151 ">
+            <div id="commonView" class="pure-menu custom-restricted-width" style="height:100%">
+                <ul id="commonViewList" class="pure-menu-list">
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Flickr</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Messenger</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Sports</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Finance</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">Games</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">News</a></li>
+                    <li class="pure-menu-item"><a href="#" class="pure-menu-link">OMG!</a></li>
+                </ul>
+                <button class="pure-button" style="margin-top:20px" onclick="edit()">设置</button>
+            </div>
+            <div id="commonEdit" class="pure-menu custom-restricted-width"
+                 style="height:100%;display:none;padding-top:10px;padding-left:5px">
+                <textarea id="commonEditText" style="height:400px;width:90%;"></textarea>
+                <button class="pure-button pure-button-primary" style="margin-top:20px" onclick="save()">保存</button>
+            </div>
+        </div>
+    </div>
+    <div class="pure-u-2-5" style="height:100%">
+        <span class="pure-menu-heading"
+              style="font-weight:bolder;background-color:#666767;color:aliceblue">文件处理</span>
+        <div style="height:100%;border-right:thin dashed #515151 ">
+            <div class="pure-form pure-form-stacked" style="height:100%;padding-left:10px;padding-top:20px">
+
+                <input type="file" id="fileInput" onchange="readFileName()">
+
+                <label for="fileNameTemplate" style="margin-top:20px">文件名：占位符@</label>
+                <input id="fileNameTemplate" type="text" style="width:90%" placeholder="学生@的家校沟通.docx"
+                       value="学生@的家校沟通.docx">
+
+                <label for="fileNameItemList" style="margin-top:20px">替换列表</label>
+                <textarea id="fileNameItemList" style="height:400px;width:90%;"></textarea>
+
+
+                <button class="pure-button pure-button-primary" style="margin-top:20px" onclick="startCopy()">生成副本
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="pure-u-2-5" style="height:100%">
+        <span class="pure-menu-heading"
+              style="font-weight:bolder;background-color:#545555;color:aliceblue">文件名预览</span>
+        <div style="height:100%;padding-left:10px">
+            <div id="buildFileNameList" class="pure-menu custom-restricted-width" style="height:100%"></div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    function edit() {
+        document.getElementById('commonView').style.display = "none";
+        document.getElementById('commonEdit').style.display = "block";
+        let commonText = store.get("commonText");
+        document.getElementById('commonEditText').value = _.join(commonText, [separator = '\n'])
+    }
+
+    function save() {
+        document.getElementById('commonView').style.display = "block";
+        document.getElementById('commonEdit').style.display = "none";
+        let commonText = column2Array(document.getElementById('commonEditText').value);
+        store.set("commonText", commonText);
+        showCommon();
+    }
+
+    function showCommon() {
+        let commonViewList = document.getElementById('commonViewList');
+        commonViewList.innerText = "";
+        let commonText = store.get("commonText");
+        for (const commonTextElement of commonText) {
+            let a = document.createElement("a");
+            a.className = "pure-menu-link";
+            a.href = "#";
+            a.innerText = commonTextElement;
+            a.addEventListener('click', function () {
+                insert(this);
+            });
+            let li = document.createElement("li");
+            li.className = "pure-menu-item";
+            li.append(a);
+            commonViewList.append(li);
+        }
+    }
+
+    showCommon();
+
+    function insert(element) {
+        let text = document.getElementById('fileNameItemList').value;
+        if (text.length != 0 && text[text.length] != '\n') {
+            text += "\n";
+        }
+        text += element.text;
+        document.getElementById('fileNameItemList').value = text;
+        document.getElementById('fileNameItemList').dispatchEvent(new Event('input', {bubbles: true}));
+    }
+
+    function readFileName() {
+        document.getElementById('fileNameTemplate').value = document.getElementById('fileInput').files[0].name;
+    }
+
+    function column2Array(text, f) {
+        let arr = _.split(text, "\n");
+        arr = _.map(arr, _.trim);
+        _.remove(arr, function (n) {
+            return n === "";
+        });
+        arr = _.uniq(arr);
+        arr = _.map(arr, f);
+        return arr;
+    }
+
+    function build() {
+        const fileNameTemplate = document.getElementById('fileNameTemplate').value;
+        const fileNameItemList = document.getElementById('fileNameItemList').value;
+        const buildFileNameList = document.getElementById('buildFileNameList');
+
+        let buildFileNames = []
+        const fileNameItems = column2Array(fileNameItemList);
+        for (const fileNameItem of fileNameItems) {
+            buildFileNames.push(_.replace(fileNameTemplate, '@', fileNameItem));
+        }
+
+        buildFileNameList.innerText = _.join(buildFileNames, [separator = '\n'])
+    }
+
+
+    document.getElementById('fileNameTemplate').addEventListener('input', build);
+    document.getElementById('fileNameItemList').addEventListener('input', build);
+
+
+    function startCopy() {
+        const fileInput = document.getElementById('fileInput');
+
+        if (!fileInput.files[0]) {
+            alert('请先选择文件');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            // 处理文件名
+            const buildFileNameList = document.getElementById('buildFileNameList').innerText;
+            const fileNameItems = column2Array(buildFileNameList);
+            // 创建副本
+            for (const newFileName of fileNameItems) {
+                const blob = new Blob([e.target.result], {type: file.type});
+                triggerDownload(blob, newFileName);
+            }
+        };
+
+        reader.onerror = () => alert('文件读取失败');
+        reader.readAsArrayBuffer(file);
+    }
+
+    function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+</script>
+</body>
+</html>
