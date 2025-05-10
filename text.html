@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JS文本处理</title>
+    <script crossorigin="anonymous"
+            integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+            referrerpolicy="no-referrer"
+            src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script crossorigin="anonymous"
+            integrity="sha512-XbzqqqogVHe2RPEnKNxzuW+57fuEDGL4O6wdxh/W75oJjbgpwa1KHB4XpUZ2rMT/hhRUI1L1n9hNpMvSJb6DiA=="
+            referrerpolicy="no-referrer"
+            src="https://cdnjs.cloudflare.com/ajax/libs/store.js/2.0.1/store.legacy.min.js"></script>
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+          integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" rel="stylesheet">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <style>
+
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .input-div {
+            background-color: #f9f9f9;
+            border: 1px solid grey;
+            padding: 10px;
+            margin: 10px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+<div class="pure-g" style="padding:10px">
+    <div class="pure-u-1-2">
+        <label style="padding:10px">原始文本：</label>
+        <div class="input-div" contenteditable id="a" style="height:400px"></div>
+    </div>
+    <div class="pure-u-1-2">
+        <label style="padding:10px">处理后的文本：</label>
+        <div class="input-div" contenteditable id="b" style="height:400px"></div>
+    </div>
+</div>
+<div class="pure-group" style="padding:10px">
+    <div style="width:100%;display:inline-flex;flex-direction: row;">
+        <label style="padding:10px">处理脚本：</label>
+        <div id="btns" style="padding-right:10px;"></div>
+
+        <div style="margin-left:auto;padding-right:10px;display:inline-flex;">
+            <button class="pure-button pure-button-primary" id="run" onclick="run()"
+                    style="width:150px;margin-right:10px;">
+                执行 <span style="font-size:10px">(⌘+Enter)</span>
+            </button>
+            <button class="pure-button pure-button-primary" id="save" onclick="save()"
+                    style="width:130px">
+                保存 <span style="font-size:10px">(⌘+S)</span>
+            </button>
+        </div>
+    </div>
+    <div class="input-div" contenteditable id="code" style="height:300px"><p></p></div>
+</div>
+<div class="pure-g" style="padding:10px">
+    <div class="pure-u-1-2" id="codes"></div>
+    <div class="pure-u-1-2" id="historys"></div>
+</div>
+
+<script>
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) && e.key === "Enter") {
+            run();
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if ((e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) && e.key === "s") {
+            save();
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    })
+
+    let historys = store.get("historys") || [];
+
+    function save() {
+        let code = document.getElementById("code").innerText;
+        if (code === "") {
+            return;
+        }
+        historys.unshift({
+            time: getTime(new Date().getTime()),
+            text: code
+        });
+        store.set("historys", historys);
+        displayHistorys();
+    }
+
+    function run() {
+        let a = document.getElementById("a").innerText;
+        let code = document.getElementById("code").innerText;
+        eval(code);
+        document.getElementById("b").innerText = a;
+    }
+
+    function displayHistorys() {
+        let historysDiv = document.getElementById("historys");
+        historysDiv.innerHTML = "";
+
+        for (const history of historys) {
+            let label = document.createElement("label");
+            label.innerText = history.time;
+            label.style = "padding:10px";
+            let div = document.createElement("div");
+            div.innerText = history.text;
+            div.className = "input-div";
+            div.contenteditable = true;
+            historysDiv.append(label);
+            historysDiv.append(div);
+        }
+    }
+
+    function displayCodes() {
+        let codesDiv = document.getElementById("codes");
+        let btnsDiv = document.getElementById("btns");
+
+        for (const key in codes) {
+            let label = document.createElement("label");
+            label.innerText = key + ":";
+            label.style = "padding:10px";
+            let div = document.createElement("div");
+            div.innerText = codes[key].text;
+            div.className = "input-div";
+            div.contenteditable = true;
+            codesDiv.append(label);
+            codesDiv.append(div);
+
+            if (codes[key].type === "btn") {
+                let btn = document.createElement("button");
+                btn.className = "pure-button";
+                btn.style = "margin-right:10px;color:white;background:rgb(28, 184, 65);"
+                btn.innerText = key;
+                btn.onclick = function () {
+                    document.getElementById("code").innerText = codes[key].text;
+                    run();
+                }
+                btnsDiv.append(btn);
+            }
+        }
+    }
+
+    function getTime(timestamp, timezoneOffset) {
+        function formatDate(date) {
+            if (!date) return;
+            var date2 = new Date(date);
+            var y = date2.getUTCFullYear();
+            var m = date2.getMonth() + 1;
+            m = m < 10 ? "θ" + m : m;
+            var d = date2.getDate();
+            d = d < 10 ? "θ" + d : d;
+            var h = date2.getHours();
+            h = h < 10 ? "θ" + h : h;
+            var minute = date2.getMinutes();
+            minute = minute < 10 ? "0" + minute : minute;
+            var seconds = date2.getMilliseconds(); //获取当前毫秒数（0 - 999）
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            return y + "-" + m + "-" + d + " " + h + ":" + minute + ":" + seconds;
+        }
+
+        var date = new Date(timestamp);
+        if (timezoneOffset !== undefined) {
+            var utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            date = new Date(utc + (3600000 * timezoneOffset));
+        }
+
+        return formatDate(date);
+    }
+
+    function column2Array(text, f) {
+        let arr = _.split(text, "\n");
+        arr = _.map(arr, _.trim);
+        _.remove(arr, function (n) {
+            return n === "";
+        });
+        arr = _.uniq(arr);
+        arr = _.map(arr, f);
+        return arr;
+    }
+
+    var codes = {
+        "时间戳": {
+            type: "btn",
+            text: "a=getTime(Number(a),0);"
+        },
+        "列转数组": {
+            type: "btn",
+            text: "a=column2Array(a, aa=>`\"${aa}\"`);"
+        }
+    }
+
+    displayHistorys()
+    displayCodes();
+
+</script>
+</body>
+</html>
