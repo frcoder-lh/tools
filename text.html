@@ -175,6 +175,12 @@
         return formatDate(date);
     }
 
+    function fixTime(timestamp) {
+        if(timestamp.length == 10){
+            return timestamp + "000";
+        }
+    }
+
     function column2Array(text, f) {
         let arr = _.split(text, "\n");
         arr = _.map(arr, _.trim);
