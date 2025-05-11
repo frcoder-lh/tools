@@ -148,7 +148,16 @@
         }
     }
 
-    function getTime(timestamp, timezoneOffset) {
+    function text2Timestamp(text, timezoneOffset) {
+        var date = new Date(text);
+        if (timezoneOffset !== undefined) {
+            var utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            date = new Date(utc + (3600000 * timezoneOffset));
+        }
+        return date.getTime();
+    }
+    
+    function timestamp2Text(timestamp, timezoneOffset) {
         function formatDate(date) {
             if (!date) return;
             var date2 = new Date(date);
@@ -194,9 +203,13 @@
     }
 
     var codes = {
-        "时间戳": {
+        "时间戳转字符串": {
             type: "btn",
-            text: "a=getTime(Number(fixTime(a)),0);"
+            text: "a=timestamp2Text(Number(fixTime(a)),0);"
+        },
+        "字符串转时间戳": {
+            type: "btn",
+            text: "a=text2Timestamp(Number(fixTime(a)),0);"
         },
         "列转数组": {
             type: "btn",
