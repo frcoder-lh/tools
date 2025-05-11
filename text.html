@@ -163,11 +163,11 @@
             var date2 = new Date(date);
             var y = date2.getUTCFullYear();
             var m = date2.getMonth() + 1;
-            m = m < 10 ? "θ" + m : m;
+            m = m < 10 ? "0" + m : m;
             var d = date2.getDate();
-            d = d < 10 ? "θ" + d : d;
+            d = d < 10 ? "0" + d : d;
             var h = date2.getHours();
-            h = h < 10 ? "θ" + h : h;
+            h = h < 10 ? "0" + h : h;
             var minute = date2.getMinutes();
             minute = minute < 10 ? "0" + minute : minute;
             var seconds = date2.getMilliseconds(); //获取当前毫秒数（0 - 999）
